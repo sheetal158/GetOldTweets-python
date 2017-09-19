@@ -78,7 +78,7 @@ class TweetManager:
 	
 	@staticmethod
 	def getJsonReponse(tweetCriteria, refreshCursor, cookieJar, proxy):
-		url = "https://twitter.com/i/search/timeline?f=tweets&q=%s&src=typd&max_position=%s"
+		url = "https://twitter.com/i/search/timeline?f=tweets&q=%s&src=typd&l=en&max_position=%s"
 		
 		urlGetData = ''
 		
@@ -100,8 +100,7 @@ class TweetManager:
 
 		if hasattr(tweetCriteria, 'topTweets'):
 			if tweetCriteria.topTweets:
-				url = "https://twitter.com/i/search/timeline?q=%s&src=typd&max_position=%s"
-		
+				url = "https://twitter.com/i/search/timeline?q=%s&src=typd&l=en&max_position=%s"
 		
 		
 		url = url % (urllib.quote(urlGetData), refreshCursor)
@@ -126,7 +125,7 @@ class TweetManager:
 			response = opener.open(url)
 			jsonResponse = response.read()
 		except:
-			print "Twitter weird response. Try to see on browser: https://twitter.com/search?q=%s&src=typd" % urllib.quote(urlGetData)
+			print "Twitter weird response. Try to see on browser: https://twitter.com/search?q=%s&src=typd&l=en" % urllib.quote(urlGetData)
 			sys.exit()
 			return
 		
