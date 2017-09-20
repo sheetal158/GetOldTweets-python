@@ -1,10 +1,15 @@
 import sys,getopt,datetime,codecs
 import re
+import logging
+
 
 if sys.version_info[0] < 3:
     import got
 else:
     import got3 as got
+
+
+logging.basicConfig(filename='log.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     
 def cleanText(text):
 
@@ -14,12 +19,14 @@ def cleanText(text):
 	words = text.split(" ")
 	for i in range(0,len(words)):
 		words[i] = words[i].strip().lower()
-        
+    	
+    	'''
 		try:
 			if words[i].startswith('http'):
 				words[i] = ""
 		except:
 			pass
+		'''
 
 	text = " ".join(words)
 	
@@ -31,7 +38,7 @@ def cleanText(text):
 	return filtered_text
 
 def main():
-
+	
 	def printTweet(descr, t):
 		print(descr)
 		print("Username: %s" % t.username)
@@ -44,7 +51,7 @@ def main():
 	outputFileName = "output_got.csv"				
 	outputFile = codecs.open(outputFileName, "a", "utf-8")
 	dateSince_str = "2016-09-14"
-	dateUntil_str = "2017-09-16"
+	dateUntil_str = "2017-07-02"
 	dateFinal_str = dateUntil_str
 	
 	#outputFile.write('username,date,retweets,favorites,text,geo,mentions,hashtags,id,permalink')
@@ -57,15 +64,13 @@ def main():
 		outputFile.flush();
 		print('More %d saved on file...\n' % len(tweets))
 		
-	
 	dateFinal = datetime.datetime.strptime(dateFinal_str, "%Y-%m-%d")
 	dateSince = datetime.datetime.strptime(dateSince_str, "%Y-%m-%d")
 
 	while dateFinal>dateSince:
 		tweetCriteria = got.manager.TweetCriteria().setQuerySearch('acetaminophen OR analgesics OR antipyretic OR duragesic OR durogesic OR fentanyl OR heroin OR hydrocodine OR hydrocodone OR hydromorphone OR hydros OR ibuprofen OR lortab OR methadone OR morphine OR narcotic OR narcotics OR opiate OR opioid OR opium OR oxycodone OR oxycontin OR oxycottin OR oxycotton OR percodan OR tylenol OR vicodin OR vicoprofen OR xanax').setSince(dateSince_str).setUntil(dateFinal_str)
-		#tweetCriteria = got.manager.TweetCriteria().setQuerySearch('fentanyl').setSince(dateSince_str).setUntil(dateFinal_str)
 		tweets = got.manager.TweetManager.getTweets(tweetCriteria, receiveBuffer)
-		print('Switching...\n')
+		logging.debug('Switching...\n')
 		dateFinal_str = tweets[-1].date.strftime("%Y-%m-%d")
 		dateFinal = datetime.datetime.strptime(dateFinal_str, "%Y-%m-%d")
 

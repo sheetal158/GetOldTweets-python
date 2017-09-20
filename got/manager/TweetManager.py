@@ -1,6 +1,8 @@
 import urllib,urllib2,json,re,datetime,sys,cookielib
+import logging
 from .. import models
 from pyquery import PyQuery
+
 
 class TweetManager:
 	
@@ -9,8 +11,11 @@ class TweetManager:
 		
 	@staticmethod
 	def getTweets(tweetCriteria, receiveBuffer=None, bufferLength=100, proxy=None):
-		refreshCursor = ''
 	
+		refreshCursor = ''
+		
+		logging.debug('I am in Manager')
+		
 		results = []
 		resultsAux = []
 		cookieJar = cookielib.CookieJar()
@@ -22,7 +27,11 @@ class TweetManager:
 
 		while active:
 			json = TweetManager.getJsonReponse(tweetCriteria, refreshCursor, cookieJar, proxy)
-			if len(json['items_html'].strip()) == 0:
+			
+			try:
+				if len(json['items_html'].strip()) == 0:
+					break
+			except:
 				break
 
 			refreshCursor = json['min_position']			
@@ -40,7 +49,8 @@ class TweetManager:
 				retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""));
 				favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""));
 				dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"));
-				id = tweetPQ.attr("data-tweet-id");
+				id = str(tweetPQ.attr("data-tweet-id"));
+				
 				permalink = tweetPQ.attr("data-permalink-path");
 				
 				geo = ''
@@ -68,9 +78,8 @@ class TweetManager:
 				
 				if tweetCriteria.maxTweets > 0 and len(results) >= tweetCriteria.maxTweets:
 					active = False
-					break
+					break			
 					
-		
 		if receiveBuffer and len(resultsAux) > 0:
 			receiveBuffer(resultsAux)
 		
@@ -81,6 +90,8 @@ class TweetManager:
 		url = "https://twitter.com/i/search/timeline?f=tweets&q=%s&src=typd&l=en&max_position=%s"
 		
 		urlGetData = ''
+		
+		dataJson = json.loads('{}')
 		
 		if hasattr(tweetCriteria, 'username'):
 			urlGetData += ' from:' + tweetCriteria.username
@@ -102,8 +113,8 @@ class TweetManager:
 			if tweetCriteria.topTweets:
 				url = "https://twitter.com/i/search/timeline?q=%s&src=typd&l=en&max_position=%s"
 		
-		
 		url = url % (urllib.quote(urlGetData), refreshCursor)
+		
 
 		headers = [
 			('Host', "twitter.com"),
@@ -124,11 +135,11 @@ class TweetManager:
 		try:
 			response = opener.open(url)
 			jsonResponse = response.read()
-		except:
-			print "Twitter weird response. Try to see on browser: https://twitter.com/search?q=%s&src=typd&l=en" % urllib.quote(urlGetData)
-			sys.exit()
-			return
+			dataJson = json.loads(jsonResponse)
+		except Exception as e:
+			logging.debug("Exception "+str(e))
+			logging.debug("Twitter weird response. Try to see on browser: https://twitter.com/search?q=%s&l=en&src=typd" % urllib.quote(urlGetData))
+			#sys.exit()
+			#return
 		
-		dataJson = json.loads(jsonResponse)
-		
-		return dataJson		
+		return dataJson

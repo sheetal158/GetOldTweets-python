@@ -1,9 +1,37 @@
 # -*- coding: utf-8 -*-
 import sys,getopt,datetime,codecs
+import re
+
+
 if sys.version_info[0] < 3:
     import got
 else:
     import got3 as got
+    
+
+def cleanText(text):
+
+	text = text.replace(","," ").replace("\n", " ").replace("\r", " ").replace("\r\n", " ")
+	filtered_text = ""
+    
+	words = text.split(" ")
+	for i in range(0,len(words)):
+		words[i] = words[i].strip().lower()
+        
+		try:
+			if words[i].startswith('http'):
+				words[i] = ""
+		except:
+			pass
+
+	text = " ".join(words)
+	
+	filtered_text = text
+    
+    #keep only informative characters
+	#filtered_text = re.sub('[^a-z|A-Z|0-9|\s|\.|@]', '', text);
+    
+	return filtered_text	
 
 def main(argv):
 
@@ -55,15 +83,16 @@ def main(argv):
 			elif opt == '--output':
 				outputFileName = arg
 				
-		outputFile = codecs.open(outputFileName, "w+", "utf-8")
+		outputFile = codecs.open(outputFileName, "a", "utf-8")
 
-		outputFile.write('username;date;retweets;favorites;text;geo;mentions;hashtags;id;permalink')
+		#outputFile.write('username,date,retweets,favorites,text,geo,mentions,hashtags,id,permalink')
 
 		print('Searching...\n')
 
 		def receiveBuffer(tweets):
+			
 			for t in tweets:
-				outputFile.write(('\n%s;%s;%d;%d;"%s";%s;%s;%s;"%s";%s' % (t.username, t.date.strftime("%Y-%m-%d %H:%M"), t.retweets, t.favorites, t.text, t.geo, t.mentions, t.hashtags, t.id, t.permalink)))
+				outputFile.write(('\n%s,%s,%d,%d,%s,%s,%s,%s,%s' % (t.username, str(t.date.strftime("%Y-%m-%d")), int(t.retweets), int(t.favorites), cleanText(t.text), str(t.geo), str(t.mentions), str(t.hashtags), str("id"+t.id))))
 			outputFile.flush();
 			print('More %d saved on file...\n' % len(tweets))
 
